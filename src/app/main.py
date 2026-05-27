@@ -1,13 +1,21 @@
 from fastapi import FastAPI
 
-app = FastAPI(title="AI Dev Workflow Lab API")
+from app.api.routes import router
+from app.core.config import settings
+from app.core.exceptions import register_exception_handlers
+from app.core.logging import configure_logging
+from app.core.middleware import RequestLoggingMiddleware
+from app.db.migrations import run_migrations
 
 
-@app.get("/health")
-def health() -> dict[str, str]:
-    return {"status": "ok"}
+def create_app() -> FastAPI:
+    configure_logging()
+    app = FastAPI(title=settings.app_title)
+    app.add_middleware(RequestLoggingMiddleware)
+    register_exception_handlers(app)
+    app.include_router(router)
+    run_migrations()
+    return app
 
 
-@app.get("/")
-def root() -> dict[str, str]:
-    return {"message": "AI Dev Workflow Lab"}
+app = create_app()
