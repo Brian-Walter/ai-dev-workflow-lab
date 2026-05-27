@@ -10,4 +10,4 @@ def health() -> dict[str, str]:
 
 @app.get("/")
 def root() -> dict[str, str]:
-    return {"message": "AI Dev Workflow Lab API"}
+    return {"message": "AI Dev Workflow Lab"}

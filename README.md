@@ -1,12 +1,12 @@
 # ai-dev-workflow-lab
 
-API Python mínima criada com FastAPI.
+API Python minima criada com FastAPI.
 
 ## Requisitos
 
-- Python 3.11+
+- Python 3.12 ou 3.13
 
-## Instalação
+## Instalacao
 
 ```powershell
 python -m venv .venv
@@ -20,18 +20,18 @@ python -m pip install -e ".[dev]"
 python -m uvicorn app.main:app --reload --app-dir src
 ```
 
-Endpoints disponíveis:
+Endpoints disponiveis:
 
-- `GET /`
-- `GET /health`
+- `GET /` retorna `{"message": "AI Dev Workflow Lab"}`
+- `GET /health` retorna `{"status": "ok"}`
 
-## Verificações
+## Testes e lint
 
 ```powershell
-.\scripts\check.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1
 ```
 
-O script executa:
+O script instala as dependencias de desenvolvimento no `.venv` local e executa:
 
-- `ruff check .`
-- `pytest`
+- `python -m ruff check .`
+- `python -m pytest -q`

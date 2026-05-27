@@ -16,4 +16,4 @@ def test_root_returns_message() -> None:
     response = client.get("/")
 
     assert response.status_code == 200
-    assert response.json() == {"message": "AI Dev Workflow Lab API"}
+    assert response.json() == {"message": "AI Dev Workflow Lab"}
