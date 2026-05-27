@@ -1,12 +1,18 @@
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-function Invoke-CheckCommand {
+$ProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
+$VenvPath = Join-Path $ProjectRoot ".venv"
+$VenvPython = Join-Path $VenvPath "Scripts\python.exe"
+$SupportedVersions = @("3.13", "3.12")
+
+Set-Location $ProjectRoot
+
+function Invoke-CommandChecked {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Command,
 
-        [Parameter(ValueFromRemainingArguments = $true)]
         [string[]] $Arguments
     )
 
@@ -16,128 +22,134 @@ function Invoke-CheckCommand {
     }
 }
 
-function Invoke-PythonModule {
+function Get-PythonVersion {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Command,
 
-        [string[]] $PythonArguments = @(),
-
-        [Parameter(Mandatory = $true)]
-        [string] $Module,
-
-        [string[]] $ModuleArguments = @()
+        [string[]] $Arguments = @()
     )
 
-    & $Command @PythonArguments -m $Module @ModuleArguments
-    if ($LASTEXITCODE -ne 0) {
-        exit $LASTEXITCODE
+    if (-not (Get-Command $Command -ErrorAction SilentlyContinue)) {
+        return $null
     }
+
+    $version = & $Command @Arguments -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
+    if ($LASTEXITCODE -ne 0) {
+        return $null
+    }
+
+    return $version.Trim()
 }
 
-function Test-Executable {
+function Test-SupportedVersion {
+    param(
+        [string] $Version
+    )
+
+    return $SupportedVersions -contains $Version
+}
+
+function Test-PythonModule {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string] $Python,
+
+        [Parameter(Mandatory = $true)]
+        [string] $Module
+    )
+
+    $previousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    & $Python -m $Module --version *> $null
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousErrorActionPreference
+
+    return ($exitCode -eq 0)
+}
+
+function Test-PathInsideProject {
     param(
         [Parameter(Mandatory = $true)]
         [string] $Path
     )
 
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        return $false
-    }
+    $fullPath = [System.IO.Path]::GetFullPath($Path)
+    $projectPrefix = $ProjectRoot.TrimEnd([System.IO.Path]::DirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
 
-    & $Path --version *> $null
-    return ($LASTEXITCODE -eq 0)
+    return $fullPath.StartsWith($projectPrefix, [System.StringComparison]::OrdinalIgnoreCase)
 }
 
-function Test-StablePython {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $Command,
-
-        [string[]] $PythonArguments = @()
+function Get-BasePython {
+    $candidates = @(
+        @{ Command = "py"; Arguments = @("-3.13"); Label = "Python 3.13 via py launcher" },
+        @{ Command = "python"; Arguments = @(); Label = "Python 3.13 via python" },
+        @{ Command = "py"; Arguments = @("-3.12"); Label = "Python 3.12 via py launcher" },
+        @{ Command = "python"; Arguments = @(); Label = "Python 3.12 via python" }
     )
 
-    if (-not (Get-Command $Command -ErrorAction SilentlyContinue)) {
-        return $false
+    foreach ($candidate in $candidates) {
+        $version = Get-PythonVersion $candidate.Command $candidate.Arguments
+        if ($version -eq "3.13" -and $candidate.Label -like "*3.13*") {
+            return @{
+                Command = $candidate.Command
+                Arguments = $candidate.Arguments
+                Version = $version
+                Label = $candidate.Label
+            }
+        }
+
+        if ($version -eq "3.12" -and $candidate.Label -like "*3.12*") {
+            return @{
+                Command = $candidate.Command
+                Arguments = $candidate.Arguments
+                Version = $version
+                Label = $candidate.Label
+            }
+        }
     }
 
-    $version = & $Command @PythonArguments -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')"
-    if ($LASTEXITCODE -ne 0) {
-        return $false
-    }
-
-    return ($version -eq "3.13" -or $version -eq "3.12")
+    return $null
 }
 
-function Remove-BrokenVirtualEnvironment {
-    param(
-        [Parameter(Mandatory = $true)]
-        [string] $VenvPath
-    )
-
-    $resolvedProject = (Resolve-Path -LiteralPath $PWD).Path
-    $fullVenvPath = [System.IO.Path]::GetFullPath((Join-Path $PWD $VenvPath))
-
-    if (-not $fullVenvPath.StartsWith($resolvedProject, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to remove virtual environment outside the project: $fullVenvPath"
-    }
-
-    $configPath = Join-Path $fullVenvPath "pyvenv.cfg"
-    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
+function Initialize-VirtualEnvironment {
+    $venvVersion = Get-PythonVersion $VenvPython
+    if (Test-SupportedVersion $venvVersion) {
+        Write-Host "Using existing .venv with Python $venvVersion"
         return
     }
 
-    $config = Get-Content -LiteralPath $configPath
-    $homeLine = $config | Where-Object { $_ -like "home = *" } | Select-Object -First 1
-    $versionLine = $config | Where-Object { $_ -like "version_info = *" } | Select-Object -First 1
+    if (Test-Path -LiteralPath $VenvPath) {
+        if (-not (Test-PathInsideProject $VenvPath)) {
+            throw "Refusing to recreate .venv outside the project: $VenvPath"
+        }
 
-    $pythonHome = $null
-    if ($homeLine) {
-        $pythonHome = $homeLine.Substring("home = ".Length).Trim()
+        if ($venvVersion) {
+            Write-Host "Existing .venv uses unsupported Python $venvVersion. Recreating local .venv."
+        }
+        else {
+            Write-Host "Existing .venv is broken or missing its Python executable. Recreating local .venv."
+        }
+
+        Remove-Item -LiteralPath $VenvPath -Recurse -Force
     }
 
-    $pythonExecutable = $null
-    if ($pythonHome) {
-        $pythonExecutable = Join-Path $pythonHome "python.exe"
+    $basePython = Get-BasePython
+    if (-not $basePython) {
+        throw "Python 3.13 or 3.12 was not found. Install one of them and run this script again."
     }
 
-    $usesUnstablePython = $versionLine -like "version_info = 3.14*"
-    $hasBrokenPython = $pythonExecutable -and (-not (Test-Executable $pythonExecutable))
-
-    if ($usesUnstablePython -or $hasBrokenPython) {
-        Write-Host "Removing broken virtual environment at $fullVenvPath"
-        Remove-Item -LiteralPath $fullVenvPath -Recurse -Force
-    }
+    Write-Host "Creating .venv with $($basePython.Label)"
+    Invoke-CommandChecked $basePython.Command -Arguments ($basePython.Arguments + @("-m", "venv", $VenvPath))
 }
 
-Remove-BrokenVirtualEnvironment ".venv"
+Initialize-VirtualEnvironment
 
-if (Get-Command uv -ErrorAction SilentlyContinue) {
-    $env:UV_CACHE_DIR = Join-Path $PWD ".uv-cache"
-    $env:UV_PROJECT_ENVIRONMENT = Join-Path $PWD ".venv"
-    $env:UV_PYTHON_INSTALL_DIR = Join-Path $PWD ".uv-python"
-
-    Invoke-CheckCommand uv run --python 3.13 --extra dev ruff check .
-    Invoke-CheckCommand uv run --python 3.13 --extra dev pytest
-    exit
+if (-not (Test-PythonModule $VenvPython "pip")) {
+    Write-Host "pip is missing in .venv. Bootstrapping pip with ensurepip."
+    Invoke-CommandChecked $VenvPython -Arguments @("-m", "ensurepip", "--upgrade")
 }
 
-if (Test-StablePython "py" @("-3.13")) {
-    Invoke-PythonModule "py" @("-3.13") "ruff" @("check", ".")
-    Invoke-PythonModule "py" @("-3.13") "pytest"
-    exit
-}
-
-if (Test-StablePython "py" @("-3.12")) {
-    Invoke-PythonModule "py" @("-3.12") "ruff" @("check", ".")
-    Invoke-PythonModule "py" @("-3.12") "pytest"
-    exit
-}
-
-if (Test-StablePython "python") {
-    Invoke-PythonModule "python" @() "ruff" @("check", ".")
-    Invoke-PythonModule "python" @() "pytest"
-    exit
-}
-
-throw "Python 3.12/3.13 was not found. Install Python 3.12 or 3.13, or install uv."
+Invoke-CommandChecked $VenvPython -Arguments @("-m", "pip", "install", "-e", ".[dev]")
+Invoke-CommandChecked $VenvPython -Arguments @("-m", "ruff", "check", ".")
+Invoke-CommandChecked $VenvPython -Arguments @("-m", "pytest", "-q")
