@@ -1,7 +1,7 @@
 [project]
 name = "ai-dev-workflow-lab"
 version = "0.1.0"
-description = "Portfolio-oriented FastAPI backend demonstrating a professional development workflow."
+description = "Portfolio-oriented FastAPI backend demonstrating REST APIs, SQLite persistence, automated tests, Docker, and CI."
 readme = "README.md"
 requires-python = ">=3.12,<3.14"
 dependencies = [

@@ -1,6 +1,9 @@
 # AI Dev Workflow Lab
 
 [![CI](https://github.com/Brian-Walter/ai-dev-workflow-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Brian-Walter/ai-dev-workflow-lab/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12%2B-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 AI Dev Workflow Lab is a Python/FastAPI backend project designed to practice and demonstrate professional software engineering workflows through a simple task management API. It includes modular architecture, automated tests, SQLite persistence, Docker support, structured logging, linting, and CI automation.
 
@@ -20,13 +23,13 @@ After running the application, open:
 http://localhost:8000/docs
 ```
 
-For a portfolio-ready visual preview, add a screenshot of the Swagger UI at:
+Optional screenshot path:
 
 ```text
 docs/images/swagger-ui.png
 ```
 
-Then reference it in this section with:
+No screenshot is included by default. After adding a real screenshot to that path, this section can reference it with:
 
 ```markdown
 ![Swagger UI](docs/images/swagger-ui.png)
@@ -82,7 +85,9 @@ This keeps the API easy to understand while still demonstrating separation of co
 ```text
 .
 |-- .github/workflows/      # CI and automated PR review workflows
-|-- docs/images/            # Optional screenshots for the README
+|-- docs/
+|   |-- images/             # Optional screenshots for the README
+|   `-- PORTFOLIO_NOTES.md  # Portfolio and interview positioning notes
 |-- scripts/                # Local development scripts
 |-- src/app/
 |   |-- api/                # FastAPI routes
@@ -95,6 +100,7 @@ This keeps the API easy to understand while still demonstrating separation of co
 |   `-- main.py             # FastAPI application factory
 |-- tests/                  # Automated tests
 |-- .env.example            # Example environment configuration
+|-- CHANGELOG.md
 |-- Dockerfile
 |-- docker-compose.yml
 |-- LICENSE

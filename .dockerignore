@@ -3,6 +3,7 @@
 .env
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .uv-cache/
 .uv-python/
 __pycache__/
@@ -11,3 +12,5 @@ __pycache__/
 build/
 dist/
 app.db
+*.sqlite
+*.sqlite3
