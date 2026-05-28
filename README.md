@@ -10,10 +10,26 @@ This project exposes a small REST API for managing tasks. The domain is intentio
 
 The API supports creating, listing, reading, updating, and deleting tasks. It also includes health and root endpoints, request ID propagation, structured JSON logs, and consistent error responses.
 
-Interactive API documentation is available at:
+## API Documentation
+
+FastAPI provides interactive API documentation through Swagger UI.
+
+After running the application, open:
 
 ```text
 http://localhost:8000/docs
+```
+
+For a portfolio-ready visual preview, add a screenshot of the Swagger UI at:
+
+```text
+docs/images/swagger-ui.png
+```
+
+Then reference it in this section with:
+
+```markdown
+![Swagger UI](docs/images/swagger-ui.png)
 ```
 
 ## Features
@@ -66,6 +82,7 @@ This keeps the API easy to understand while still demonstrating separation of co
 ```text
 .
 |-- .github/workflows/      # CI and automated PR review workflows
+|-- docs/images/            # Optional screenshots for the README
 |-- scripts/                # Local development scripts
 |-- src/app/
 |   |-- api/                # FastAPI routes
