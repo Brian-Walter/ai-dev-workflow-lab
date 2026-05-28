@@ -5,13 +5,24 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
-AI Dev Workflow Lab is a Python/FastAPI backend project designed to practice and demonstrate professional software engineering workflows through a simple task management API. It includes modular architecture, automated tests, SQLite persistence, Docker support, structured logging, linting, and CI automation.
+AI Dev Workflow Lab is a Python/FastAPI backend project designed to practice
+and demonstrate professional software engineering workflows through a simple
+task management API.
+
+It includes modular architecture, automated tests, SQLite persistence, Docker
+support, structured logging, linting, and CI automation.
 
 ## Overview
 
-This project exposes a small REST API for managing tasks. The domain is intentionally simple so the repository can focus on backend engineering practices: clear module boundaries, predictable validation, database access through repositories, service-level application logic, testable endpoints, Dockerized execution, and GitHub Actions automation.
+This project exposes a small REST API for managing tasks. The domain is
+intentionally simple so the repository can focus on backend engineering
+practices: clear module boundaries, predictable validation, database access
+through repositories, service-level application logic, testable endpoints,
+Dockerized execution, and GitHub Actions automation.
 
-The API supports creating, listing, reading, updating, and deleting tasks. It also includes health and root endpoints, request ID propagation, structured JSON logs, and consistent error responses.
+The API supports creating, listing, reading, updating, and deleting tasks.
+It also includes health and root endpoints, request ID propagation, structured
+JSON logs, and consistent error responses.
 
 ## API Documentation
 
@@ -68,7 +79,9 @@ The project uses a small layered architecture:
 - `db`: Engine, sessions, and lightweight table creation.
 - `core`: Configuration, logging, middleware, request context, and exception handling.
 
-This keeps the API easy to understand while still demonstrating separation of concerns. Routes stay thin, services coordinate behavior, repositories own persistence details, and schemas define the public API contract.
+This keeps the API easy to understand while still demonstrating separation of
+concerns. Routes stay thin, services coordinate behavior, repositories own
+persistence details, and schemas define the public API contract.
 
 ## Project Structure
 
@@ -99,6 +112,8 @@ This keeps the API easy to understand while still demonstrating separation of co
 ```
 
 ## API Endpoints
+
+The API exposes the following endpoints:
 
 | Method | Path | Description |
 | --- | --- | --- |
@@ -211,7 +226,9 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 ```
 
-Use `.env.example` as a reference for supported environment variables. For local runs, set variables in your shell before starting the API when you need to override defaults:
+Use `.env.example` as a reference for supported environment variables.
+For local runs, set variables in your shell before starting the API when you
+need to override defaults:
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///./app.db"
@@ -264,7 +281,8 @@ Run with Docker Compose:
 docker compose up --build
 ```
 
-Docker Compose mounts the source code for local development and stores SQLite data in the `sqlite_data` named volume.
+Docker Compose mounts the source code for local development and stores SQLite
+data in the `sqlite_data` named volume.
 
 ## Tests and Code Quality
 
@@ -286,7 +304,8 @@ Run the local validation script:
 powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1
 ```
 
-The script creates or reuses `.venv`, installs development dependencies, runs Ruff, and runs Pytest.
+The script creates or reuses `.venv`, installs development dependencies,
+runs Ruff, and runs Pytest.
 
 ## Development Workflow
 
@@ -311,7 +330,9 @@ The main CI workflow runs on pushes and pull requests. It:
 - runs `python -m pytest -q`;
 - builds the Docker image.
 
-The PR review workflow adds an automated pull request comment with lint output, test output, and common repository checks such as generated artifacts, debug statements, and missing Docker files.
+The PR review workflow adds an automated pull request comment with lint output,
+test output, and common repository checks such as generated artifacts, debug
+statements, and missing Docker files.
 
 ## Roadmap
 
@@ -325,7 +346,8 @@ The PR review workflow adds an automated pull request comment with lint output, 
 
 ## What This Project Demonstrates
 
-This project demonstrates backend skills that are useful for junior backend roles, freelance API work, and professional portfolio review:
+This project demonstrates backend skills that are useful for junior backend
+roles, freelance API work, and professional portfolio review:
 
 - Building REST APIs with FastAPI
 - Structuring backend applications
