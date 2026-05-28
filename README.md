@@ -23,17 +23,7 @@ After running the application, open:
 http://localhost:8000/docs
 ```
 
-Optional screenshot path:
-
-```text
-docs/images/swagger-ui.png
-```
-
-No screenshot is included by default. After adding a real screenshot to that path, this section can reference it with:
-
-```markdown
 ![Swagger UI](docs/images/swagger-ui.png)
-```
 
 ## Features
 
