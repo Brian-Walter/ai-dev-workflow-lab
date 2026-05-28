@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from datetime import datetime
 
 import pytest
 from fastapi.testclient import TestClient
@@ -46,6 +47,27 @@ def database_session() -> Generator[Session]:
 client = TestClient(app)
 
 
+def assert_timestamp(value: str) -> None:
+    assert isinstance(value, str)
+    datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def assert_task_payload(
+    payload: dict[str, object],
+    *,
+    task_id: int,
+    title: str,
+    description: str | None,
+    completed: bool,
+) -> None:
+    assert payload["id"] == task_id
+    assert payload["title"] == title
+    assert payload["description"] == description
+    assert payload["completed"] is completed
+    assert_timestamp(payload["created_at"])
+    assert_timestamp(payload["updated_at"])
+
+
 def test_create_task() -> None:
     response = client.post(
         "/tasks",
@@ -56,24 +78,26 @@ def test_create_task() -> None:
     )
 
     assert response.status_code == 201
-    assert response.json() == {
-        "id": 1,
-        "title": "Write tests",
-        "description": "Cover task creation and listing",
-        "completed": False,
-    }
+    assert_task_payload(
+        response.json(),
+        task_id=1,
+        title="Write tests",
+        description="Cover task creation and listing",
+        completed=False,
+    )
 
 
 def test_create_task_without_description() -> None:
     response = client.post("/tasks", json={"title": "Ship API"})
 
     assert response.status_code == 201
-    assert response.json() == {
-        "id": 1,
-        "title": "Ship API",
-        "description": None,
-        "completed": False,
-    }
+    assert_task_payload(
+        response.json(),
+        task_id=1,
+        title="Ship API",
+        description=None,
+        completed=False,
+    )
 
 
 def test_list_tasks() -> None:
@@ -83,20 +107,22 @@ def test_list_tasks() -> None:
     response = client.get("/tasks")
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 1,
-            "title": "First task",
-            "description": None,
-            "completed": False,
-        },
-        {
-            "id": 2,
-            "title": "Second task",
-            "description": "Later",
-            "completed": False,
-        },
-    ]
+    payload = response.json()
+    assert len(payload) == 2
+    assert_task_payload(
+        payload[0],
+        task_id=1,
+        title="First task",
+        description=None,
+        completed=False,
+    )
+    assert_task_payload(
+        payload[1],
+        task_id=2,
+        title="Second task",
+        description="Later",
+        completed=False,
+    )
 
 
 def test_list_tasks_empty() -> None:
@@ -114,14 +140,21 @@ def test_list_tasks_supports_pagination() -> None:
     response = client.get("/tasks?skip=1&limit=1")
 
     assert response.status_code == 200
-    assert response.json() == [
-        {
-            "id": 2,
-            "title": "Second task",
-            "description": None,
-            "completed": False,
-        },
-    ]
+    payload = response.json()
+    assert len(payload) == 1
+    assert_task_payload(
+        payload[0],
+        task_id=2,
+        title="Second task",
+        description=None,
+        completed=False,
+    )
+
+
+def test_list_tasks_rejects_negative_skip() -> None:
+    response = client.get("/tasks?skip=-1")
+
+    assert response.status_code == 422
 
 
 def test_get_task_by_id() -> None:
@@ -130,12 +163,13 @@ def test_get_task_by_id() -> None:
     response = client.get(f"/tasks/{create_response.json()['id']}")
 
     assert response.status_code == 200
-    assert response.json() == {
-        "id": 1,
-        "title": "Read docs",
-        "description": None,
-        "completed": False,
-    }
+    assert_task_payload(
+        response.json(),
+        task_id=1,
+        title="Read docs",
+        description=None,
+        completed=False,
+    )
 
 
 def test_get_task_by_id_returns_404() -> None:
@@ -167,12 +201,31 @@ def test_patch_task() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "id": 1,
-        "title": "Publish API docs",
-        "description": None,
-        "completed": True,
-    }
+    assert_task_payload(
+        response.json(),
+        task_id=1,
+        title="Publish API docs",
+        description=None,
+        completed=True,
+    )
+
+
+def test_patch_task_accepts_empty_body() -> None:
+    create_response = client.post("/tasks", json={"title": "Leave unchanged"})
+
+    response = client.patch(
+        f"/tasks/{create_response.json()['id']}",
+        json={},
+    )
+
+    assert response.status_code == 200
+    assert_task_payload(
+        response.json(),
+        task_id=1,
+        title="Leave unchanged",
+        description=None,
+        completed=False,
+    )
 
 
 def test_patch_task_rejects_null_title() -> None:

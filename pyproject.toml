@@ -3,7 +3,7 @@ name = "ai-dev-workflow-lab"
 version = "0.1.0"
 description = "Portfolio-oriented FastAPI backend demonstrating REST APIs, SQLite persistence, automated tests, Docker, and CI."
 readme = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.13,<3.14"
 dependencies = [
     "fastapi>=0.115.0",
     "sqlalchemy>=2.0.0",
@@ -14,6 +14,7 @@ dependencies = [
 dev = [
     "httpx>=0.27.0",
     "pytest>=8.0.0",
+    "pytest-cov>=6.0.0",
     "ruff>=0.6.0",
 ]
 
@@ -23,7 +24,15 @@ testpaths = ["tests"]
 
 [tool.ruff]
 line-length = 88
-target-version = "py312"
+target-version = "py313"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.coverage.run]
+branch = true
+source = ["app"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true

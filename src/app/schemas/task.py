@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -24,5 +26,7 @@ class TaskResponse(BaseModel):
     title: str
     description: str | None
     completed: bool
+    created_at: datetime
+    updated_at: datetime
 
     model_config = {"from_attributes": True}

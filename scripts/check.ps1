@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $VenvPath = Join-Path $ProjectRoot ".venv"
 $VenvPython = Join-Path $VenvPath "Scripts\python.exe"
-$SupportedVersions = @("3.13", "3.12")
+$SupportedVersions = @("3.13")
 
 Set-Location $ProjectRoot
 
@@ -83,9 +83,7 @@ function Test-PathInsideProject {
 function Get-BasePython {
     $candidates = @(
         @{ Command = "py"; Arguments = @("-3.13"); Label = "Python 3.13 via py launcher" },
-        @{ Command = "python"; Arguments = @(); Label = "Python 3.13 via python" },
-        @{ Command = "py"; Arguments = @("-3.12"); Label = "Python 3.12 via py launcher" },
-        @{ Command = "python"; Arguments = @(); Label = "Python 3.12 via python" }
+        @{ Command = "python"; Arguments = @(); Label = "Python 3.13 via python" }
     )
 
     foreach ($candidate in $candidates) {
@@ -99,14 +97,6 @@ function Get-BasePython {
             }
         }
 
-        if ($version -eq "3.12" -and $candidate.Label -like "*3.12*") {
-            return @{
-                Command = $candidate.Command
-                Arguments = $candidate.Arguments
-                Version = $version
-                Label = $candidate.Label
-            }
-        }
     }
 
     return $null
@@ -136,7 +126,7 @@ function Initialize-VirtualEnvironment {
 
     $basePython = Get-BasePython
     if (-not $basePython) {
-        throw "Python 3.13 or 3.12 was not found. Install one of them and run this script again."
+        throw "Python 3.13 was not found. Install it and run this script again."
     }
 
     Write-Host "Creating .venv with $($basePython.Label)"
@@ -152,4 +142,4 @@ if (-not (Test-PythonModule $VenvPython "pip")) {
 
 Invoke-CommandChecked $VenvPython -Arguments @("-m", "pip", "install", "-e", ".[dev]")
 Invoke-CommandChecked $VenvPython -Arguments @("-m", "ruff", "check", ".")
-Invoke-CommandChecked $VenvPython -Arguments @("-m", "pytest", "-q")
+Invoke-CommandChecked $VenvPython -Arguments @("-m", "pytest", "--cov=app", "--cov-report=term-missing", "--cov-report=xml", "-q")

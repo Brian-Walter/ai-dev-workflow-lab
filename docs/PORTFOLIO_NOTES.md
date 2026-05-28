@@ -24,9 +24,11 @@ API design, tests, Docker usage, logging, persistence, and automation.
   and core infrastructure
 - Validating request and response data with Pydantic
 - Persisting data with SQLAlchemy and SQLite
+- Modeling task audit fields with `created_at` and `updated_at`
 - Managing database sessions through FastAPI dependencies
 - Returning consistent error responses with request IDs
 - Writing endpoint, service, and repository tests with Pytest
+- Measuring test coverage with pytest-cov
 - Using Ruff for linting
 - Running the API with Docker and Docker Compose
 - Persisting SQLite data through a Docker Compose volume
@@ -36,6 +38,8 @@ API design, tests, Docker usage, logging, persistence, and automation.
 ## Trade-Offs
 
 - SQLite is used to keep the project easy to run locally and simple to review.
+- `pip` is used instead of multiple dependency managers to keep setup
+  instructions consistent across local development, Docker, and CI.
 - Database tables are created with SQLAlchemy metadata instead of versioned
   migrations.
 - Authentication and authorization are intentionally out of scope for this

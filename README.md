@@ -1,8 +1,9 @@
 # AI Dev Workflow Lab
 
 [![CI](https://github.com/Brian-Walter/ai-dev-workflow-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Brian-Walter/ai-dev-workflow-lab/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/Python-3.12%2B-blue)
+![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![Coverage](https://img.shields.io/badge/Coverage-96%25-brightgreen)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
 
 AI Dev Workflow Lab is a Python/FastAPI backend project designed to practice
@@ -11,6 +12,9 @@ task management API.
 
 It includes modular architecture, automated tests, SQLite persistence, Docker
 support, structured logging, linting, and CI automation.
+
+Note: the "AI" in the project name refers to an AI-assisted development
+workflow, not AI product features.
 
 ## Overview
 
@@ -43,6 +47,7 @@ http://localhost:8000/docs
 - Simple pagination for task listing
 - SQLite persistence with SQLAlchemy
 - Pydantic request and response schemas
+- Created and updated timestamps for tasks
 - Modular route, schema, service, repository, model, database, and core layers
 - Structured JSON request logging
 - Request ID propagation through `X-Request-ID`
@@ -56,7 +61,7 @@ http://localhost:8000/docs
 
 ## Tech Stack
 
-- Python 3.12+
+- Python 3.13
 - FastAPI
 - Uvicorn
 - Pydantic
@@ -92,6 +97,8 @@ persistence details, and schemas define the public API contract.
 |   |-- images/             # Optional screenshots for the README
 |   `-- PORTFOLIO_NOTES.md  # Portfolio and interview positioning notes
 |-- scripts/                # Local development scripts
+|   |-- check.ps1           # Windows validation script
+|   `-- check.sh            # Linux/macOS validation script
 |-- src/app/
 |   |-- api/                # FastAPI routes
 |   |-- core/               # Config, logging, middleware, exceptions
@@ -147,7 +154,9 @@ Response:
   "id": 1,
   "title": "Write tests",
   "description": "Cover task creation and listing",
-  "completed": false
+  "completed": false,
+  "created_at": "2026-05-28T12:00:00",
+  "updated_at": "2026-05-28T12:00:00"
 }
 ```
 
@@ -165,7 +174,9 @@ Response:
     "id": 1,
     "title": "Write tests",
     "description": "Cover task creation and listing",
-    "completed": false
+    "completed": false,
+    "created_at": "2026-05-28T12:00:00",
+    "updated_at": "2026-05-28T12:00:00"
   }
 ]
 ```
@@ -191,7 +202,9 @@ Response:
   "id": 1,
   "title": "Write tests",
   "description": "Cover task creation and listing",
-  "completed": true
+  "completed": true,
+  "created_at": "2026-05-28T12:00:00",
+  "updated_at": "2026-05-28T12:05:00"
 }
 ```
 
@@ -212,10 +225,40 @@ Missing task response:
 
 ## Running Locally
 
+This project uses `pip` for installation and dependency management. The
+repository intentionally does not include a lock file so the setup remains
+simple and aligned with the Dockerfile, CI workflow, and local scripts.
+
+Use Python 3.13.
+
+### Linux/macOS
+
+Create and activate a virtual environment:
+
+```bash
+python3.13 -m venv .venv
+source .venv/bin/activate
+```
+
+Install the project with development dependencies:
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -e ".[dev]"
+```
+
+Run the API:
+
+```bash
+python -m uvicorn app.main:app --reload --app-dir src
+```
+
+### Windows PowerShell
+
 Create and activate a virtual environment:
 
 ```powershell
-python -m venv .venv
+py -3.13 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -246,6 +289,30 @@ Open:
 ```text
 http://localhost:8000
 http://localhost:8000/docs
+```
+
+Root response:
+
+```bash
+curl http://localhost:8000/
+```
+
+```json
+{
+  "message": "AI Dev Workflow Lab"
+}
+```
+
+Health response:
+
+```bash
+curl http://localhost:8000/health
+```
+
+```json
+{
+  "status": "ok"
+}
 ```
 
 Environment variables:
@@ -294,18 +361,24 @@ python -m ruff check .
 
 Run tests:
 
-```powershell
-python -m pytest -q
+```bash
+python -m pytest --cov=app --cov-report=term-missing --cov-report=xml -q
 ```
 
-Run the local validation script:
+Run the local validation script on Linux/macOS:
+
+```bash
+bash ./scripts/check.sh
+```
+
+Run the local validation script on Windows:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\scripts\check.ps1
 ```
 
-The script creates or reuses `.venv`, installs development dependencies,
-runs Ruff, and runs Pytest.
+The scripts create or reuse `.venv`, install development dependencies, run Ruff,
+and run Pytest with coverage.
 
 ## Development Workflow
 
@@ -327,7 +400,7 @@ The main CI workflow runs on pushes and pull requests. It:
 - installs Python 3.13;
 - installs the project with development dependencies;
 - runs `python -m ruff check .`;
-- runs `python -m pytest -q`;
+- runs `python -m pytest --cov=app --cov-report=term-missing --cov-report=xml -q`;
 - builds the Docker image.
 
 The PR review workflow adds an automated pull request comment with lint output,
@@ -342,7 +415,7 @@ statements, and missing Docker files.
 - Add authentication as a separate future exercise.
 - Add production database examples such as PostgreSQL.
 - Add more OpenAPI examples and API contract documentation.
-- Add coverage reporting.
+- Publish coverage reports through a hosted coverage service.
 
 ## What This Project Demonstrates
 
@@ -354,9 +427,11 @@ roles, freelance API work, and professional portfolio review:
 - Separating routes, schemas, services, repositories, and models
 - Validating data with Pydantic
 - Persisting data with SQLAlchemy and SQLite
+- Modeling basic audit fields with `created_at` and `updated_at`
 - Managing database sessions through FastAPI dependencies
 - Returning consistent error responses
 - Writing automated tests with Pytest
+- Measuring test coverage with pytest-cov
 - Testing endpoints, services, and repositories
 - Using Ruff for linting
 - Running applications with Docker
