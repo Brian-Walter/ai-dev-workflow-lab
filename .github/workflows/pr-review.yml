@@ -84,7 +84,7 @@ jobs:
             issues=$((issues + 1))
           fi
 
-          if grep -RIn --exclude-dir=.git --exclude-dir=.venv --exclude-dir=.pytest_cache --exclude-dir=.ruff_cache -E 'TODO|FIXME|XXX' src tests scripts README.md pyproject.toml .github 2>/dev/null; then
+          if grep -RIn --exclude=pr-review.yml --exclude-dir=.git --exclude-dir=.venv --exclude-dir=.pytest_cache --exclude-dir=.ruff_cache -E 'TODO|FIXME|XXX' src tests scripts README.md pyproject.toml .github 2>/dev/null; then
             echo "- TODO/FIXME markers were found. Confirm they are intentional." >> common-issues-report.md
             issues=$((issues + 1))
           fi

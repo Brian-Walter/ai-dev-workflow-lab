@@ -1,4 +1,5 @@
 .venv/
+.env
 .pytest_cache/
 .ruff_cache/
 .uv-cache/
@@ -6,4 +7,8 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
 app.db

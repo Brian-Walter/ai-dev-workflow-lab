@@ -1,6 +1,7 @@
 import logging
 
 from fastapi import FastAPI, Request, status
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -8,7 +9,25 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 logger = logging.getLogger("app.exceptions")
 
 
+class NotFoundError(Exception):
+    def __init__(self, detail: str) -> None:
+        self.detail = detail
+
+
 def register_exception_handlers(app: FastAPI) -> None:
+    @app.exception_handler(NotFoundError)
+    async def not_found_exception_handler(
+        request: Request,
+        exc: NotFoundError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "detail": exc.detail,
+                "request_id": _get_request_id(request),
+            },
+        )
+
     @app.exception_handler(StarletteHTTPException)
     async def http_exception_handler(
         request: Request,
@@ -30,7 +49,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             content={
-                "detail": exc.errors(),
+                "detail": jsonable_encoder(exc.errors()),
                 "request_id": _get_request_id(request),
             },
         )

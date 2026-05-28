@@ -3,6 +3,7 @@ import logging
 from datetime import UTC, datetime
 from typing import Any
 
+from app.core.config import settings
 from app.core.request_context import request_id_context
 
 
@@ -35,4 +36,4 @@ def configure_logging() -> None:
     root_logger = logging.getLogger()
     root_logger.handlers.clear()
     root_logger.addHandler(handler)
-    root_logger.setLevel(logging.INFO)
+    root_logger.setLevel(settings.log_level)
